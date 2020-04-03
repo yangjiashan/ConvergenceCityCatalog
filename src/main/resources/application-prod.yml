@@ -1,0 +1,132 @@
+#spring:
+#  datasource:
+#    url: jdbc:oracle:thin:@(description=(ADDRESS_LIST =(address=(protocol=tcp)(host=192.168.101.3)(port=1521))(address=(protocol=tcp)(host=192.168.101.4)(port=1521))(load_balance=yes))(connect_data =(service_name=zwdsjhj)))
+#    username: dsjhj
+#    driver-class-name: oracle.jdbc.driver.OracleDriver
+#    password: Sirc_Hj_#123
+#    type: com.alibaba.druid.pool.DruidDataSource
+#    # 初始化大小，最小，最大
+#    initialSize: 5
+#    minIdle: 5
+#    maxActive: 20
+#    # 配置获取连接等待超时的时间
+#    maxWait: 60000
+#    # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+#    timeBetweenEvictionRunsMillis: 60000
+#    # 配置一个连接在池中最小生存的时间，单位是毫秒
+#    minEvictableIdleTimeMillis: 300000
+#    validationQuery: select 1 from dual
+#    testWhileIdle: true
+#    testOnBorrow: false
+#    testOnReturn: false
+#    # 打开PSCache，并且指定每个连接上PSCache的大小 内存占用优化 提升SQL执行性能
+#    poolPreparedStatements: true
+#    maxPoolPreparedStatementPerConnectionSize: 20
+#    # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙 ;日志是slf4j，log4j改为slf4j
+#    filters: stat,wall,slf4j
+#    # ͨ通过connectProperties属性来打开mergeSql功能；慢SQL记录
+#    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+#    # 合并多个DruidDataSource的监控数据
+#    useGlobalDataSourceStat: true
+#
+#server:
+#  compression:
+#    enabled: true
+#    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+#    # 默认情况下，仅会压缩2048字节以上的内容
+#    min-response-size: 2048
+#  port: 106
+#  servlet:
+#    context-path: /ConvergenceCityCatalog
+#
+#
+#hjsm2prikey: MIGHAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBG0wawIBAQQgnN0+wHCaI+m/sLlf3ixhLorSCGbUQ/s/AxNGe9+4kp6hRANCAAShoAhxsRzt5Xxxx0DGAJQRe+z7bFlsglsAdJosV4OSkGoUtDeLS+Dd8Pz6O2tbJDqtlhVMd+Q5oJ522Bxb1+/x
+#hjsm2pubkey: MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEoaAIcbEc7eV8ccdAxgCUEXvs+2xZbIJbAHSaLFeDkpBqFLQ3i0vg3fD8+jtrWyQ6rZYVTHfkOaCedtgcW9fv8Q==
+#
+#singonWSDL: http://10.100.10.155/signonservice/usersignon.asmx?wsdl
+#
+## 打开sql日志
+##logging:
+##  level:
+##    com.fgi.city.dao: debug
+#
+#
+#hystrix:
+#  command:
+#    default:
+#      execution:
+#        isolation:
+#          thread:
+#            #command的执行的超时时间 默认是1000
+#            timeoutInMilliseconds: 8000
+#        timeout:
+#          #command执行时间超时是否抛异常 默认是true
+#          enabled: true
+#        fallback:
+#          #当执行失败或者请求被拒绝，是否会尝试调用hystrixCommand.getFallback()
+#          enabled: true
+#  threadpool:
+#    default:
+#      #并发执行的最大线程数，默认10
+#      coreSize: 50
+#      #Since 1.5.9 能正常运行command的最大支付并发数
+#      maximumSize: 50
+#      #BlockingQueue的最大队列数，当设为－1，会使用SynchronousQueue，值为正时使用LinkedBlcokingQueue。
+#      #该设置只会在初始化时有效，之后不能修改threadpool的queue size，除非reinitialising thread executor。
+#      #默认－1。
+#      maxQueueSize: 100
+#      #即使maxQueueSize没有达到，达到queueSizeRejectionThreshold该值后，请求也会被拒绝。
+#      #因为maxQueueSize不能被动态修改，这个参数将允许我们动态设置该值。if maxQueueSize == -1，该字段将不起作用
+#      queueSizeRejectionThreshold: 80
+#
+#parsed_data: A399DD73EE9845FCB84300765D6DCCBC
+#parsed_user: 2FBB9455CFBA4F2FABE7F281D9FA2843
+#parsed_guid: 1B982240D9D24D91971209C1FF4DC9DE
+#parsed_sgid: 12315DC4414D49FAA95BF2C4B611FEB3
+#
+#autoCleanLogCronExpression: 0 0 2 * * ?
+#logKeepDay: 1000
+## 1开启， 0关闭
+#autoCleanlogEnable: 0
+#
+## 自动生成class路径（根据实际路径写）
+#autoGenerateClassOutPath: E:\\class_auto_create\\
+#
+## 自动生成class全定限名
+#autoPackageName: com.fgi.city.template.
+#
+#
+## 监测频率（每30分钟）定时探测地市接口可通性 暂时不开
+#monitorInterfaceTime:
+#  cron:
+#    expression: 0 0/1 * * * ?
+#
+##如果数据为空的字段，则该字段省略不显示，可以通过添加配置文件，规定查询数据为空是则返回null。（查询时为空也要显示）
+#mybatis:
+#  configuration:
+#    call-setters-on-nulls: true
+#
+##地市地区码-地市对应的ID
+##福州
+#area_01: 533F1A27BD3B4937953CB644826C21EE
+##厦门
+#area_02: CAB704A93A6C4BA9BFB2C5F67F895178
+##宁德
+#area_03: 8C2C6E82B17B4DBE9EC81E58CCF7C8DC
+##莆田
+#area_04: 3AE95BDB9344481EA109A8A55482D02E
+##泉州
+#area_05: 349E33686F6B466DB26BEF4A3C8FC6EF
+##漳州
+#area_06: E9A607D9188146B082CCB6A4D38330F0
+##龙岩
+#area_07: 50CD523672E644189A0F75826CD61516
+##三明
+#area_08: 8B2CC4C1C40E45CB8E2E4E9C927534AC
+##南平
+#area_09: A45D7FD8C644494A81C2EB2424F399BA
+##平潭综合试验区
+#area_10: 3093F635959140CA899DC04E40F6913C
+#
+#
+#interfaceExecuteUrl: http://10.100.10.151:106/ConvergenceCityCatalog

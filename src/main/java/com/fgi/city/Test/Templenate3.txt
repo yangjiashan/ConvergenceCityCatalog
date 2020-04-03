@@ -1,0 +1,14 @@
+@RequestMapping(value = "mapper_hj_method_name", method = RequestMethod.POST)
+public String hj_method_name(HttpServletRequest request) {
+    String interfaceId = "hj_interface_id";
+    System.out.println(interfaceId);
+    // 获取接口参数，判断参数类型：账号密码类型、口令类型、其他类型
+
+    // 替换参数
+
+    // 转调地市接口
+
+    // 添加日志
+
+    return "success";
+}

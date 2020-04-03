@@ -1,0 +1,24 @@
+spring:
+  cloud:
+    config:
+      username: hjpt_configs
+      password: hjpt@123456
+      #配置中心地址
+      uri: http://localhost:20000/
+      #分支
+      label: ConvergenceCityCatalog-Config
+      #名称
+      name: ConvergenceCityCatalog
+      #环境
+      profile: dev
+      #在获取不到远程配置时，立即失败
+      fail-fast: true
+      retry:
+        #最初重试间隔为 1000 毫秒
+        initial-interval: 1000
+        #最多重试 6 次
+        max-attempts: 6
+        #最长重试间隔为 2000 毫秒
+        max-interval: 2000
+        #每次重试失败后，重试间隔所增加的倍数
+        multiplier: 1.1

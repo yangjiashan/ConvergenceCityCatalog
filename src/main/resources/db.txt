@@ -1,0 +1,985 @@
+﻿// 用到的表，需要创建
+
+select *from organization_city; -- 机构
+select *from assetsys_city -- 系统
+select *from catalog_city;-- 事项
+select *from businessmatter_city;-- 业务信息
+select *from businessindicator_city;-- 业务指标
+select *from interface_city;-- 接口
+select *from interface_method_city;-- 接口方法
+select *from interface_method_field_city;-- 方法参数
+select *from dictionary_city;-- 字典
+select *from secretkeytable; -- 秘钥表
+select *from cityreportlog;--上报日志表
+select *from datapreview_city; -- 上报数据预览接口信息
+select *from interface_change_city; -- 变更记录
+
+
+// 调用接口用到的表
+select *from interface_permission_city -- 接口权限配置表
+select *from interface_visit_city -- 接口访问次数表 // 无用，已经合并到interface_permission_city表，可以删除
+select *from interfacelog_city --接口调用日志表
+select *from accounttable_city --地市上报接口调用账号密码表
+
+
+/***
+    下面是对应的表结构， 上正式环境时候记得导入 2019/10/25
+***/
+
+-- Create table  机构
+create table ORGANIZATION_CITY
+(
+  id             VARCHAR2(64) not null,
+  orgname        VARCHAR2(256) not null,
+  orgshortname   VARCHAR2(128),
+  areacode       VARCHAR2(12) not null,
+  sortnum        NUMBER,
+  createtime     DATE default sysdate not null,
+  updatetime     DATE default sysdate not null,
+  singleorgid    VARCHAR2(64),
+  icon           BLOB,
+  datapreviewurl VARCHAR2(512)
+)
+-- Add comments to the table
+comment on table ORGANIZATION_CITY
+  is '机构表，地市目录、接口上传用';
+-- Add comments to the columns
+comment on column ORGANIZATION_CITY.id
+  is '主键';
+comment on column ORGANIZATION_CITY.orgname
+  is '机构中文全称';
+comment on column ORGANIZATION_CITY.orgshortname
+  is '机构中文简称';
+comment on column ORGANIZATION_CITY.areacode
+  is '机构所属设区市字典编码，从设区市字典表获得';
+comment on column ORGANIZATION_CITY.sortnum
+  is '机构排序号';
+comment on column ORGANIZATION_CITY.createtime
+  is '创建时间';
+comment on column ORGANIZATION_CITY.updatetime
+  is '更新时间';
+comment on column ORGANIZATION_CITY.singleorgid
+  is '单点机构ID，第一次上报时取上报者的guid所属的机构ID，以后上报以该字段区别是不是同机构下操作';
+comment on column ORGANIZATION_CITY.icon
+  is '机构图标，byte[]方式存放';
+comment on column ORGANIZATION_CITY.datapreviewurl
+  is '机构数据预览接口地址 http post方式 入参为 orgname,catalogname,businessmatter_cname 返回值为jsonarray包含10条json数据';
+-- Create/Recreate primary, unique and foreign key constraints
+alter table ORGANIZATION_CITY
+  add constraint PK_ORGANIZATION_CITY primary key (ID)
+  ;
+
+
+-- 系统
+create table ASSETSYS_CITY
+(
+id                      VARCHAR2(64) not null,
+orgid                   VARCHAR2(32),
+sysname                 VARCHAR2(200),
+run_network             VARCHAR2(200),
+database_type           VARCHAR2(100),
+sysintroduction         VARCHAR2(1000),
+createtime              DATE default sysdate,
+updatetime              DATE default sysdate,
+contactdept             VARCHAR2(100),
+contactperson           VARCHAR2(40),
+phone                   VARCHAR2(20),
+developer_contactdept   VARCHAR2(100),
+developer_contactperson VARCHAR2(40),
+developer_phone         VARCHAR2(20),
+sortnum                 NUMBER
+)
+;
+comment on table ASSETSYS_CITY
+is '业务系统，地市目录、接口上报用';
+comment on column ASSETSYS_CITY.id
+is '主键';
+comment on column ASSETSYS_CITY.orgid
+is '关联机构';
+comment on column ASSETSYS_CITY.sysname
+is '业务系统名称';
+comment on column ASSETSYS_CITY.run_network
+is '运行网络';
+comment on column ASSETSYS_CITY.database_type
+is '数据库类型';
+comment on column ASSETSYS_CITY.sysintroduction
+is '系统简介';
+comment on column ASSETSYS_CITY.createtime
+is '创建时间';
+comment on column ASSETSYS_CITY.updatetime
+is '更新时间';
+comment on column ASSETSYS_CITY.contactdept
+is '单位联系人部门';
+comment on column ASSETSYS_CITY.contactperson
+is '单位联系人姓名';
+comment on column ASSETSYS_CITY.phone
+is '单位联系人手机';
+comment on column ASSETSYS_CITY.developer_contactdept
+is '开发商及其联系人部门';
+comment on column ASSETSYS_CITY.developer_contactperson
+is '开发商及其联系人姓名';
+comment on column ASSETSYS_CITY.developer_phone
+is '开发商及其联系人手机';
+comment on column ASSETSYS_CITY.sortnum
+is '排序号';
+alter table ASSETSYS_CITY
+add constraint PK_ASSETSYS_CITY primary key (ID);
+
+
+-- 事项
+create table CATALOG_CITY
+(
+  id          VARCHAR2(64) not null,
+  sysid       VARCHAR2(64) not null,
+  catalogname VARCHAR2(256) not null,
+  sortnum     NUMBER,
+  createtime  DATE default sysdate not null,
+  updatetime  DATE default sysdate not null
+)
+;
+comment on table CATALOG_CITY
+  is '业务事项，地市目录、接口上报用';
+comment on column CATALOG_CITY.id
+  is '主键';
+comment on column CATALOG_CITY.sysid
+  is '业务系统ID';
+comment on column CATALOG_CITY.catalogname
+  is '业务事项名称';
+comment on column CATALOG_CITY.sortnum
+  is '排序号';
+comment on column CATALOG_CITY.createtime
+  is '创建时间';
+comment on column CATALOG_CITY.updatetime
+  is '更新时间';
+alter table CATALOG_CITY
+  add constraint PK_CATALOG_CITY primary key (ID);
+
+
+-- 业务信息
+create table BUSINESSMATTER_CITY
+(
+  id          VARCHAR2(64) not null,
+  catalogid   VARCHAR2(64) not null,
+  mattername  VARCHAR2(256) not null,
+  tablename   VARCHAR2(64),
+  infotype    VARCHAR2(64),
+  sortnum     NUMBER,
+  createtime  DATE default sysdate not null,
+  updatetime  DATE default sysdate not null,
+  datapreview CLOB
+)
+-- Add comments to the table
+comment on table BUSINESSMATTER_CITY
+  is '业务信息，地市目录、接口上传用';
+-- Add comments to the columns
+comment on column BUSINESSMATTER_CITY.id
+  is '主键';
+comment on column BUSINESSMATTER_CITY.catalogid
+  is '业务事项ID，对应catalog_city表主键';
+comment on column BUSINESSMATTER_CITY.mattername
+  is '业务信息名称';
+comment on column BUSINESSMATTER_CITY.tablename
+  is '业务信息对应数据库表名';
+comment on column BUSINESSMATTER_CITY.infotype
+  is '业务信息对应的信息类别，传字典编码，从信息类别字典表
+获得，多个用顿号隔开
+';
+comment on column BUSINESSMATTER_CITY.sortnum
+  is '排序号';
+comment on column BUSINESSMATTER_CITY.createtime
+  is '创建时间';
+comment on column BUSINESSMATTER_CITY.updatetime
+  is '更新时间';
+comment on column BUSINESSMATTER_CITY.datapreview
+  is '业务信息数据预览';
+-- Create/Recreate primary, unique and foreign key constraints
+alter table BUSINESSMATTER_CITY
+  add constraint PK_BUSINESSMATTER_CITY primary key (ID);
+
+
+-- 业务指标
+create table BUSINESSINDICATOR_CITY
+(
+  id          VARCHAR2(32) not null,
+  matterid    VARCHAR2(32) not null,
+  ename       VARCHAR2(200),
+  cname       VARCHAR2(300),
+  fieldtype   VARCHAR2(10) not null,
+  fieldlength NUMBER,
+  ispk        VARCHAR2(4) not null,
+  sortnum     NUMBER(5),
+  isnull      VARCHAR2(4),
+  createtime  DATE default sysdate not null,
+  updatetime  DATE default sysdate not null
+)
+;
+comment on table BUSINESSINDICATOR_CITY
+  is '业务信息指标项，地市目录上报用';
+comment on column BUSINESSINDICATOR_CITY.id
+  is '主键';
+comment on column BUSINESSINDICATOR_CITY.matterid
+  is '业务事项ID,关联业务事项表businessmatter_city的ID';
+comment on column BUSINESSINDICATOR_CITY.ename
+  is '字段英文名称';
+comment on column BUSINESSINDICATOR_CITY.cname
+  is '字段中文名称';
+comment on column BUSINESSINDICATOR_CITY.fieldtype
+  is '字段类型,关联字典表dictionary的typename字段为"字典_指标类型"的字典';
+comment on column BUSINESSINDICATOR_CITY.fieldlength
+  is '字段长度';
+comment on column BUSINESSINDICATOR_CITY.ispk
+  is '是否主键,关联字典表dictionary_city的typename字段为"字典_是与否"的字典（1：否，2：是）';
+comment on column BUSINESSINDICATOR_CITY.sortnum
+  is '排序号';
+comment on column BUSINESSINDICATOR_CITY.isnull
+  is '是否为空,关联字典表dictionary_city的typename字段为"字典_是与否"的字典（1：否，2：是）';
+comment on column BUSINESSINDICATOR_CITY.createtime
+  is '创建时间';
+comment on column BUSINESSINDICATOR_CITY.updatetime
+  is '更新时间';
+alter table BUSINESSINDICATOR_CITY
+  add constraint PK_BUSINESSINDICATOR_CITY primary key (ID);
+
+-- 接口
+create table INTERFACE_CITY
+(
+  id            VARCHAR2(64) not null,
+  orgid         VARCHAR2(64) not null,
+  interfacename VARCHAR2(128),
+  interfacetype VARCHAR2(2) default 01,
+  sortnum       NUMBER,
+  createtime    DATE default sysdate not null,
+  updatetime    DATE default sysdate not null,
+  interfaceurl  VARCHAR2(512),
+  interfacedesc VARCHAR2(512),
+  state         VARCHAR2(1) default 1,
+  openstate     VARCHAR2(1) default 1,
+  publishstate  VARCHAR2(1) default 0,
+  publishurl    VARCHAR2(512)
+)
+;
+comment on table INTERFACE_CITY
+  is '接口表，地市接口上传用';
+comment on column INTERFACE_CITY.id
+  is '主键';
+comment on column INTERFACE_CITY.orgid
+  is '机构ID,orgnization_city主键';
+comment on column INTERFACE_CITY.interfacename
+  is '接口名称';
+comment on column INTERFACE_CITY.interfacetype
+  is '接口类型，传字典，对应dictionary_city中typename=字典_接口类型，默认为webservice';
+comment on column INTERFACE_CITY.sortnum
+  is '用于显示排序';
+comment on column INTERFACE_CITY.createtime
+  is '创建时间';
+comment on column INTERFACE_CITY.updatetime
+  is '更新时间';
+comment on column INTERFACE_CITY.interfaceurl
+  is '接口地址';
+comment on column INTERFACE_CITY.interfacedesc
+  is '接口描述';
+comment on column INTERFACE_CITY.state
+  is '状态，1->正常数据，0->已删除数据 （逻辑删）';
+comment on column INTERFACE_CITY.openstate
+  is '是否公开，1->否，2->是';
+comment on column INTERFACE_CITY.publishstate
+  is '接口发布状态，0->未发布   1->待测试    2->已测试   3->已更新未处理  4->已删除未处理  5->已删除  6->禁用  7->启用';
+comment on column INTERFACE_CITY.publishurl
+  is '接口发布地址，填写格式如： /test...， 主机和端口由获取者自己拼接，拼接完整地址如：http://localhost:10003/test...';
+alter table INTERFACE_CITY
+  add constraint PK_INTERFACE_CITY primary key (ID);
+
+
+-- 接口方法
+create table INTERFACE_METHOD_CITY
+(
+  id                 VARCHAR2(64) not null,
+  interfaceid        VARCHAR2(64) not null,
+  methodname         VARCHAR2(128),
+  methodabbreviation VARCHAR2(128),
+  methoddescribe     VARCHAR2(512),
+  querytable         VARCHAR2(128),
+  createtime         DATE default sysdate not null,
+  updatetime         DATE default sysdate not null,
+  resultexample      VARCHAR2(2000),
+  methodtype         VARCHAR2(2),
+  requesttype        VARCHAR2(12) default 'POST',
+  paramformat        VARCHAR2(2) default '01',
+  monitorstatus      VARCHAR2(2) default 0,
+  monitordesc        VARCHAR2(1000),
+  state              VARCHAR2(1) default 1,
+  openstate          VARCHAR2(1) default 1,
+  publishstate       VARCHAR2(1) default 0,
+  sortnum            NUMBER
+)
+;
+comment on table INTERFACE_METHOD_CITY
+  is '接口方法表，地市接口上报用';
+comment on column INTERFACE_METHOD_CITY.id
+  is '主键';
+comment on column INTERFACE_METHOD_CITY.interfaceid
+  is '接口ID，对应interface_city主键';
+comment on column INTERFACE_METHOD_CITY.methodname
+  is '接口方法名称';
+comment on column INTERFACE_METHOD_CITY.methodabbreviation
+  is '接口方法中文名称-简称';
+comment on column INTERFACE_METHOD_CITY.methoddescribe
+  is '接口方法描述';
+comment on column INTERFACE_METHOD_CITY.querytable
+  is '接口查询业务表';
+comment on column INTERFACE_METHOD_CITY.createtime
+  is '创建时间';
+comment on column INTERFACE_METHOD_CITY.updatetime
+  is '更新时间';
+comment on column INTERFACE_METHOD_CITY.resultexample
+  is '返回值示例';
+comment on column INTERFACE_METHOD_CITY.methodtype
+  is '方法类型：0、查询类，1、验证类';
+comment on column INTERFACE_METHOD_CITY.requesttype
+  is '请求类型';
+comment on column INTERFACE_METHOD_CITY.paramformat
+  is '参数格式，01:json格式字符串，02:键-值&分隔形式';
+comment on column INTERFACE_METHOD_CITY.monitorstatus
+  is '探测状态，0:未检测，1:检测可通，-1:检测不通';
+comment on column INTERFACE_METHOD_CITY.monitordesc
+  is '探测描述';
+comment on column INTERFACE_METHOD_CITY.state
+  is '状态，1->正常数据，0->已删除数据 （逻辑删）';
+comment on column INTERFACE_METHOD_CITY.openstate
+  is '是否公开，1->否，2->是';
+comment on column INTERFACE_METHOD_CITY.publishstate
+  is '接口发布状态，0->未发布   1->待测试    2->已测试   3->已更新未处理  4->已删除未处理  5->已删除  6->禁用  7->启用';
+comment on column INTERFACE_METHOD_CITY.sortnum
+  is '排序号，用于显示排序，1显示最前面';
+alter table INTERFACE_METHOD_CITY
+  add constraint PK_INTERFACE_METHOD_CITY primary key (ID);
+
+
+-- 方法参数
+create table INTERFACE_METHOD_FIELD_CITY
+(
+  id         VARCHAR2(64) not null,
+  methodid   VARCHAR2(64) not null,
+  fieldtype  VARCHAR2(1) not null,
+  sortnum    NUMBER,
+  paramname  VARCHAR2(128),
+  paramtype  VARCHAR2(6) default '00',
+  describe   VARCHAR2(512),
+  createtime DATE default sysdate not null,
+  updatetime DATE default sysdate not null,
+  paramvalue VARCHAR2(1024),
+  state      VARCHAR2(1) default 1
+)
+;
+comment on table INTERFACE_METHOD_FIELD_CITY
+  is '接口方法参数表、输入或者输出，地市接口上报用';
+comment on column INTERFACE_METHOD_FIELD_CITY.id
+  is '主键';
+comment on column INTERFACE_METHOD_FIELD_CITY.methodid
+  is '方法id';
+comment on column INTERFACE_METHOD_FIELD_CITY.fieldtype
+  is '字段类型，0、输入，1、输出';
+comment on column INTERFACE_METHOD_FIELD_CITY.sortnum
+  is '排序号';
+comment on column INTERFACE_METHOD_FIELD_CITY.paramname
+  is '参数名称';
+comment on column INTERFACE_METHOD_FIELD_CITY.paramtype
+  is '参数类型，01:账号类型，02:密码类型，03:口令类型，00：其他';
+comment on column INTERFACE_METHOD_FIELD_CITY.describe
+  is '参数描述';
+comment on column INTERFACE_METHOD_FIELD_CITY.createtime
+  is '创建时间';
+comment on column INTERFACE_METHOD_FIELD_CITY.updatetime
+  is '更新时间';
+comment on column INTERFACE_METHOD_FIELD_CITY.paramvalue
+  is '参数示例值';
+comment on column INTERFACE_METHOD_FIELD_CITY.state
+  is '状态，1->正常数据，0->已删除数据 （逻辑删）';
+alter table INTERFACE_METHOD_FIELD_CITY
+  add constraint PK_INTERFACE_MEHTOD_FIELD_CITY primary key (ID);
+
+
+-- 字典
+create table DICTIONARY_CITY
+(
+  id         VARCHAR2(32) not null,
+  pid        VARCHAR2(32),
+  name       NVARCHAR2(100),
+  typename   VARCHAR2(100),
+  dictvalue  NVARCHAR2(200),
+  orderid    NUMBER,
+  createtime DATE default sysdate not null,
+  updatetime DATE default sysdate not null
+)
+;
+comment on table DICTIONARY_CITY
+  is '地市目录字典表';
+comment on column DICTIONARY_CITY.id
+  is '字典项ID';
+comment on column DICTIONARY_CITY.pid
+  is '字典ID';
+comment on column DICTIONARY_CITY.name
+  is '字典项名称';
+comment on column DICTIONARY_CITY.typename
+  is '字典类别名称';
+comment on column DICTIONARY_CITY.dictvalue
+  is '字典项值';
+comment on column DICTIONARY_CITY.orderid
+  is '排序号';
+comment on column DICTIONARY_CITY.createtime
+  is '创建时间';
+comment on column DICTIONARY_CITY.updatetime
+  is '更新时间';
+alter table DICTIONARY_CITY
+  add constraint PK_DICTIONARY_CITY primary key (ID);
+
+
+-- 秘钥表
+create table SECRETKEYTABLE
+(
+  id         VARCHAR2(64) not null,
+  orgid      VARCHAR2(64) not null,
+  secretkey  VARCHAR2(1024) not null,
+  ivkey      VARCHAR2(1024),
+  btype      VARCHAR2(2) not null,
+  createtime DATE default sysdate,
+  updatetime DATE default sysdate,
+  padding    VARCHAR2(2) default 1 not null,
+  ktype      VARCHAR2(2),
+  areacode   VARCHAR2(2)
+)
+;
+comment on table SECRETKEYTABLE
+  is '秘钥表，以单位、业务类型区分保存单位SM4私钥、SM2公钥';
+comment on column SECRETKEYTABLE.id
+  is '主键';
+comment on column SECRETKEYTABLE.orgid
+  is '机构ID  (单点的)';
+comment on column SECRETKEYTABLE.secretkey
+  is '秘钥';
+comment on column SECRETKEYTABLE.ivkey
+  is '初始向量';
+comment on column SECRETKEYTABLE.btype
+  is '业务类型（1 - >地市目录上报），2 - >系统接入数据解密';
+comment on column SECRETKEYTABLE.createtime
+  is '创建时间';
+comment on column SECRETKEYTABLE.updatetime
+  is '更新时间';
+comment on column SECRETKEYTABLE.padding
+  is '填充方式（1 - >PKCS5Padding，2 - >PKCS7Padding，3 - >NOPading） 默认为 1';
+comment on column SECRETKEYTABLE.ktype
+  is '秘钥类型（1 - > SM4秘钥，2 - > SM2公钥）';
+comment on column SECRETKEYTABLE.areacode
+  is '地市编码值（见  dictionary_city   typename=''字典_区市编码''）';
+create unique index PK_SECRETKEYTABLE_ORGID_BTYPE on SECRETKEYTABLE (ORGID, BTYPE, KTYPE, AREACODE);
+alter table SECRETKEYTABLE
+  add constraint PK_SECRETKEYTABLE primary key (ID);
+
+
+--上报日志表
+create table CITYREPORTLOG
+(
+  id            VARCHAR2(64) not null,
+  username      VARCHAR2(256),
+  orgname       VARCHAR2(256),
+  singleorgid   VARCHAR2(64),
+  interfacename VARCHAR2(128),
+  accesstype    VARCHAR2(12),
+  inputparams   CLOB,
+  outputparams  CLOB,
+  status        VARCHAR2(2),
+  createtime    DATE default sysdate
+)
+-- Add comments to the table
+comment on table CITYREPORTLOG
+  is '地市目录、接口上报日志（保留最近30天）';
+-- Add comments to the columns
+comment on column CITYREPORTLOG.id
+  is '主键';
+comment on column CITYREPORTLOG.username
+  is '用户名';
+comment on column CITYREPORTLOG.orgname
+  is '机构名称';
+comment on column CITYREPORTLOG.singleorgid
+  is '用户所在机构单点机构ID';
+comment on column CITYREPORTLOG.interfacename
+  is '访问接口名称';
+comment on column CITYREPORTLOG.accesstype
+  is '访问类型，addOrUpdate, delete';
+comment on column CITYREPORTLOG.inputparams
+  is '输入参数';
+comment on column CITYREPORTLOG.outputparams
+  is '输出参数';
+comment on column CITYREPORTLOG.status
+  is '状态';
+comment on column CITYREPORTLOG.createtime
+  is '创建时间';
+-- Create/Recreate primary, unique and foreign key constraints
+alter table CITYREPORTLOG
+  add constraint PK_CITYREPORT_ID primary key (ID);
+
+
+-- 上报数据预览接口信息
+create table DATAPREVIEW_CITY
+(
+  id            VARCHAR2(32) not null,
+  areacode      VARCHAR2(12) not null,
+  dataurl       VARCHAR2(512),
+  reportorg     VARCHAR2(32),
+  reportaccount VARCHAR2(128),
+  createtime    DATE default sysdate,
+  updatetime    DATE default sysdate
+)
+;
+comment on table DATAPREVIEW_CITY
+  is '地市信息-数据预览接口地址（地市上报用）';
+comment on column DATAPREVIEW_CITY.id
+  is '主键';
+comment on column DATAPREVIEW_CITY.areacode
+  is '区市字典编码，从设区市字典表获得';
+comment on column DATAPREVIEW_CITY.dataurl
+  is '数据预览接口地址';
+comment on column DATAPREVIEW_CITY.reportorg
+  is '上报者机构id(单点)';
+comment on column DATAPREVIEW_CITY.reportaccount
+  is '上报者账号';
+comment on column DATAPREVIEW_CITY.createtime
+  is '创建时间';
+comment on column DATAPREVIEW_CITY.updatetime
+  is '更新时间';
+create unique index PK_DATAPREVIEW_AREACODE on DATAPREVIEW_CITY (AREACODE);
+alter table DATAPREVIEW_CITY
+  add constraint PK_DATAPREVIEW_CITY primary key (ID);
+
+-- 变更记录表
+create table INTERFACE_CHANGE_CITY
+(
+  id            VARCHAR2(32) not null,
+  changetableid VARCHAR2(32),
+  changetable   VARCHAR2(100),
+  changecolumn  VARCHAR2(100),
+  oldvalue      VARCHAR2(1000),
+  newvalue      VARCHAR2(1000),
+  type          VARCHAR2(32),
+  createtime    DATE default sysdate,
+  creatorid     VARCHAR2(32),
+  flag          VARCHAR2(32),
+  batch         VARCHAR2(32)
+)
+;
+comment on table INTERFACE_CHANGE_CITY
+  is ' 地市上报接口-变更表';
+comment on column INTERFACE_CHANGE_CITY.id
+  is '主键id';
+comment on column INTERFACE_CHANGE_CITY.changetableid
+  is '关联地市接口表、地市接口方法表、地市接口参数表的id';
+comment on column INTERFACE_CHANGE_CITY.changetable
+  is '变更表：地市接口、地市接口方法、地市接口参数';
+comment on column INTERFACE_CHANGE_CITY.changecolumn
+  is '变更字段';
+comment on column INTERFACE_CHANGE_CITY.oldvalue
+  is '原值';
+comment on column INTERFACE_CHANGE_CITY.newvalue
+  is '新值';
+comment on column INTERFACE_CHANGE_CITY.type
+  is '变更类型，0：新增、1：删除、2：修改';
+comment on column INTERFACE_CHANGE_CITY.createtime
+  is '创建时间';
+comment on column INTERFACE_CHANGE_CITY.creatorid
+  is '创建人id';
+comment on column INTERFACE_CHANGE_CITY.flag
+  is '是否删除数据，0：有效，1：无效';
+comment on column INTERFACE_CHANGE_CITY.batch
+  is '批次 暂且用id随机序列来代替下';
+alter table INTERFACE_CHANGE_CITY
+  add constraint INTERFACE_CHANGE_CITY_ID primary key (ID);
+
+
+-- 接口权限配置表
+create table INTERFACE_PERMISSION_CITY
+(
+  id          VARCHAR2(32) not null,
+  interfaceid VARCHAR2(64) not null,
+  methodid    VARCHAR2(64) not null,
+  orgid       VARCHAR2(64),
+  account     VARCHAR2(128) not null,
+  displayname VARCHAR2(64),
+  orgname     VARCHAR2(400),
+  platform    VARCHAR2(400),
+  platformid  VARCHAR2(60),
+  callnumber  NUMBER default 0,
+  visit       NUMBER default 0,
+  createtime  DATE default sysdate,
+  updatetime  DATE default sysdate
+)
+;
+comment on table INTERFACE_PERMISSION_CITY
+  is '地市接口权限配置表';
+comment on column INTERFACE_PERMISSION_CITY.id
+  is '主键';
+comment on column INTERFACE_PERMISSION_CITY.interfaceid
+  is '接口id';
+comment on column INTERFACE_PERMISSION_CITY.methodid
+  is '方法id';
+comment on column INTERFACE_PERMISSION_CITY.orgid
+  is '访问机构id';
+comment on column INTERFACE_PERMISSION_CITY.account
+  is '访问单点账号';
+comment on column INTERFACE_PERMISSION_CITY.displayname
+  is '访问姓名';
+comment on column INTERFACE_PERMISSION_CITY.orgname
+  is '访问机构名称';
+comment on column INTERFACE_PERMISSION_CITY.platform
+  is '访问平台';
+comment on column INTERFACE_PERMISSION_CITY.platformid
+  is '访问平台字典id';
+comment on column INTERFACE_PERMISSION_CITY.callnumber
+  is '访问次数';
+comment on column INTERFACE_PERMISSION_CITY.visit
+  is '当天当前调用次数';
+comment on column INTERFACE_PERMISSION_CITY.createtime
+  is '创建时间';
+comment on column INTERFACE_PERMISSION_CITY.updatetime
+  is '更新时间';
+create index PERMISSION_METHODID_ACCOUNT on INTERFACE_PERMISSION_CITY (METHODID, ACCOUNT);
+alter table INTERFACE_PERMISSION_CITY
+  add constraint PK_INTERFACE_PERMISSION_CITY primary key (ID);
+
+-- 接口访问次数表
+create table INTERFACE_VISIT_CITY
+(
+  methodid   VARCHAR2(32) not null,
+  account    VARCHAR2(100) not null,
+  count      NUMBER,
+  createtime DATE default sysdate,
+  updatetime DATE default sysdate
+)
+;
+comment on table INTERFACE_VISIT_CITY
+  is '接口访问次数';
+comment on column INTERFACE_VISIT_CITY.methodid
+  is '方法id';
+comment on column INTERFACE_VISIT_CITY.account
+  is '账号';
+comment on column INTERFACE_VISIT_CITY.count
+  is '访问次数';
+comment on column INTERFACE_VISIT_CITY.createtime
+  is '创建时间';
+comment on column INTERFACE_VISIT_CITY.updatetime
+  is '更新时间';
+alter table INTERFACE_VISIT_CITY
+  add constraint PK_INTERFACE_VISIT_CITY primary key (METHODID, ACCOUNT);
+
+
+-- 上报日志表
+create table INTERFACELOG_CITY
+(
+  id             VARCHAR2(64) not null,
+  interfaceid    VARCHAR2(64),
+  methodid       VARCHAR2(64),
+  invoke_org     VARCHAR2(256),
+  invoke_account VARCHAR2(128),
+  invoke_name    VARCHAR2(64),
+  interface_name VARCHAR2(256),
+  method_cname   VARCHAR2(256),
+  invoke_time    DATE,
+  createtime     DATE default sysdate,
+  method_ename   VARCHAR2(256),
+  interface_type VARCHAR2(2),
+  platform       VARCHAR2(400),
+  platformid     VARCHAR2(60)
+)
+;
+comment on table INTERFACELOG_CITY
+  is '接口调用日志，地市互联互通接口日志';
+comment on column INTERFACELOG_CITY.id
+  is '主键';
+comment on column INTERFACELOG_CITY.interfaceid
+  is '接口ID interface_city 主键';
+comment on column INTERFACELOG_CITY.methodid
+  is '方法ID interface_method_city 主键';
+comment on column INTERFACELOG_CITY.invoke_org
+  is '调用者机构';
+comment on column INTERFACELOG_CITY.invoke_account
+  is '调用者账号';
+comment on column INTERFACELOG_CITY.invoke_name
+  is '调用者姓名';
+comment on column INTERFACELOG_CITY.interface_name
+  is '接口名称';
+comment on column INTERFACELOG_CITY.method_cname
+  is '方法中文名称';
+comment on column INTERFACELOG_CITY.invoke_time
+  is '调用时间';
+comment on column INTERFACELOG_CITY.createtime
+  is '创建时间';
+comment on column INTERFACELOG_CITY.method_ename
+  is '方法英文名称';
+comment on column INTERFACELOG_CITY.interface_type
+  is '接口类型，传字典，对应dictionary_city中typename=字典_接口类型';
+comment on column INTERFACELOG_CITY.platform
+  is '访问平台';
+comment on column INTERFACELOG_CITY.platformid
+  is '访问平台字典id';
+alter table INTERFACELOG_CITY
+  add constraint INTERFACELOG_CITY_ID primary key (ID);
+
+
+--地市上报接口调用账号密码表
+create table ACCOUNTTABLE_CITY
+(
+  id         VARCHAR2(64) not null,
+  orgid      VARCHAR2(64) not null,
+  username   VARCHAR2(128),
+  password   VARCHAR2(1024),
+  methodid   VARCHAR2(64),
+  createtime DATE default sysdate,
+  updatetime DATE default sysdate
+)
+;
+comment on table ACCOUNTTABLE_CITY
+  is '互联互通、地市上报接口调用账号密码表';
+comment on column ACCOUNTTABLE_CITY.id
+  is '主键';
+comment on column ACCOUNTTABLE_CITY.orgid
+  is '地市机构ID，organization_city表主键';
+comment on column ACCOUNTTABLE_CITY.username
+  is '用户名称';
+comment on column ACCOUNTTABLE_CITY.password
+  is '用户密码';
+comment on column ACCOUNTTABLE_CITY.methodid
+  is '获取口令的接口方法id，interface_method_city主键';
+comment on column ACCOUNTTABLE_CITY.createtime
+  is '创建时间';
+comment on column ACCOUNTTABLE_CITY.updatetime
+  is '更新时间';
+alter table ACCOUNTTABLE_CITY
+  add constraint PK_ACCOUNTTABLE_CITY primary key (ID);
+
+
+-- 对应字典
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('85F9E85DB63239FD556711CA7E999B81', '0', null, '字典_公有事项类别', null, 0, to_date('15-07-2019 15:40:01', 'dd-mm-yyyy hh24:mi:ss'), to_date('15-07-2019 15:40:01', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('86F7E85DB63238FD456721CR7E989B83', '85F9E85DB63239FD556711CA7E999B81', '财务审计数据', '字典_公有事项类别', '02', 2, to_date('15-07-2019 15:45:27', 'dd-mm-yyyy hh24:mi:ss'), to_date('15-07-2019 15:45:27', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('42F0S85DB63259FF656701CA7E779H82', '85F9E85DB63239FD556711CA7E999B81', '公共信用&一张网', '字典_公有事项类别', '01', 1, to_date('15-07-2019 15:47:44', 'dd-mm-yyyy hh24:mi:ss'), to_date('15-07-2019 15:47:44', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('6644445DB63238FD456721CR7E989B83', '6666665DB63238FD456721CR7E989B83', '键-值&分隔形式', '字典_参数格式', '02', 2, to_date('09-09-2019 14:59:11', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-09-2019 14:59:11', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('6655555DB63238FD456721CR7E989B83', '6666665DB63238FD456721CR7E989B83', 'json格式字符串', '字典_参数格式', '01', 1, to_date('09-09-2019 14:59:11', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-09-2019 14:59:11', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('6666665DB63238FD456721CR7E989B83', '0', null, '字典_参数格式', null, 0, to_date('09-09-2019 14:59:11', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-09-2019 14:59:11', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('DE9E3B00BC934D7290A69067044A93A3', '0', null, '字典_业务信息类别', null, 0, to_date('09-07-2019 13:35:40', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:35:40', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('E394D8E1444B49D09FE4F45E76E6ECB9', 'DCF70DAC7B3F48EA816818589968A61A', '字符型', '字典_指标类型', '1', 1, to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('52F9E85DB83249FD856718CA7E996B8C', 'DCF70DAC7B3F48EA816818589968A61A', '数字型', '字典_指标类型', '2', 2, to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('909A420CE17C416B9927DB42E8AA9092', 'DCF70DAC7B3F48EA816818589968A61A', '时间型', '字典_指标类型', '3', 3, to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('4D7966239D2E4BA9819E7C860B24B076', 'DCF70DAC7B3F48EA816818589968A61A', '大文本型', '字典_指标类型', '4', 4, to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('8213B585C18F453783E7C361236DA7B5', 'DCF70DAC7B3F48EA816818589968A61A', '附件型', '字典_指标类型', '5', 5, to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('7C6813E2EB7643AB9DFD1D71180DDEFA', 'DCF70DAC7B3F48EA816818589968A61A', '日期型', '字典_指标类型', '6', 6, to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:41:44', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('E9061D79DF3F4109AD649FA7F9F2A451', '07D7B2EA2E1949DCA7DE9C75DD2BFCAE', 'WEBSERVICE', '字典_接口类型', '01', 1, to_date('09-07-2019 15:21:51', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 15:21:51', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('51CF6EE007FC4058924E83A29840B9A1', '07D7B2EA2E1949DCA7DE9C75DD2BFCAE', 'HTTP RESTFUL', '字典_接口类型', '02', 2, to_date('09-07-2019 15:21:51', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 15:21:51', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('1119E85DB63239FD556711CA7E999B81', '6669E85DB63239FD556711CA7E999B81', '5000', '字典_每日访问次数', '5000', 5, to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('2229E85DB63239FD556711CA7E999B81', '6669E85DB63239FD556711CA7E999B81', '2000', '字典_每日访问次数', '2000', 4, to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('3339E85DB63239FD556711CA7E999B81', '6669E85DB63239FD556711CA7E999B81', '1000', '字典_每日访问次数', '1000', 3, to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('4449E85DB63239FD556711CA7E999B81', '6669E85DB63239FD556711CA7E999B81', '100', '字典_每日访问次数', '100', 2, to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('5559E85DB63239FD556711CA7E999B81', '6669E85DB63239FD556711CA7E999B81', '50', '字典_每日访问次数', '50', 1, to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('6669E85DB63239FD556711CA7E999B81', '0', null, '字典_每日访问次数', null, null, to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('10-09-2019 13:51:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('E7CABCD655354E629D5F00A03E008137', 'DE9E3B00BC934D7290A69067044A93A3', '自然人', '字典_业务信息类别', '001', 1, to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('9DF05A1939CA4823B9EAE47F670070DB', 'DE9E3B00BC934D7290A69067044A93A3', '法人', '字典_业务信息类别', '002', 2, to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('5A7575D5BDCE4A4FBD1DD03794A01C5C', 'DE9E3B00BC934D7290A69067044A93A3', '信用', '字典_业务信息类别', '003', 3, to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('D64B9BF870694151945877C9E67BEA9F', 'DE9E3B00BC934D7290A69067044A93A3', '电子证照', '字典_业务信息类别', '004', 4, to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('EBF9F41B2CAB4A33A483C69290B0541C', 'DE9E3B00BC934D7290A69067044A93A3', '监测数据', '字典_业务信息类别', '005', 5, to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('8449BD6960DF4E97A6A29FB0522371A1', 'DE9E3B00BC934D7290A69067044A93A3', '其他', '字典_业务信息类别', '006', 6, to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:38:13', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('6C6DE0598C6D4FE1BCF92A9E76477A20', '0', null, '字典_输入参数类型', null, 0, to_date('09-07-2019 13:47:12', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:47:12', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('1BF043D405674C97ADA0AC828D317463', '6C6DE0598C6D4FE1BCF92A9E76477A20', '字符型', '字典_输入参数类型', '1', 1, to_date('09-07-2019 15:15:21', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 15:15:21', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('5B44A1847476469F9F8F36C03CC39EB7', '6C6DE0598C6D4FE1BCF92A9E76477A20', '整型', '字典_输入参数类型', '2', 2, to_date('09-07-2019 15:15:21', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 15:15:21', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('E16660525ACC414BA4A321D7530D1C2B', '6C6DE0598C6D4FE1BCF92A9E76477A20', '布尔型', '字典_输入参数类型', '3', 3, to_date('09-07-2019 15:15:21', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 15:15:21', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '0', null, '字典_区市编码', null, 0, to_date('09-07-2019 12:38:49', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 12:38:49', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('AF4E8156315C40B684EE4213B6EDD897', '0', null, '字典_接口发布状态', null, 0, to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('07D7B2EA2E1949DCA7DE9C75DD2BFCAE', '0', null, '字典_接口类型', null, 0, to_date('09-07-2019 15:16:37', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 15:16:37', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('DB009EAC3B9E4DCBAB47CA6728AF68F1', 'AF4E8156315C40B684EE4213B6EDD897', '未发布', '字典_接口发布状态', '0', 1, to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('23CE5D5DB47A4FA29E8E414A16B1432C', 'AF4E8156315C40B684EE4213B6EDD897', '待测试', '字典_接口发布状态', '1', 2, to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('3FD5F2CE79D74BC7A0EEA97A9F78ADFC', 'AF4E8156315C40B684EE4213B6EDD897', '已测试', '字典_接口发布状态', '2', 3, to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('586A390C24F842E6A3624DFC475998A6', 'AF4E8156315C40B684EE4213B6EDD897', '已更新未处理', '字典_接口发布状态', '3', 4, to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('41445DB4926F41638B0F6A5C4E53B267', 'AF4E8156315C40B684EE4213B6EDD897', '已删除未处理', '字典_接口发布状态', '4', 5, to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('6FDD606D51FB432692C3C2242528040E', 'AF4E8156315C40B684EE4213B6EDD897', '已删除', '字典_接口发布状态', '5', 6, to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('6A2B5092CFEF4C068D69798F2A8B4CEC', 'AF4E8156315C40B684EE4213B6EDD897', '禁用', '字典_接口发布状态', '6', 7, to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('172B74F76D194F67A105D356E32B1426', 'AF4E8156315C40B684EE4213B6EDD897', '启用', '字典_接口发布状态', '7', 8, to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:27:45', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('00E9ADA695084C7085F7579241A6BABC', '0', null, '字典_方法查询类型', null, 0, to_date('06-09-2019 11:35:08', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:35:08', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('D4D5F0F7B1D340AAB42A125BCEB998A5', '00E9ADA695084C7085F7579241A6BABC', '查询类', '字典_方法查询类型', '0', 1, to_date('06-09-2019 11:35:08', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:35:08', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('DB8B23A88BD546E197C538F469BD081D', '00E9ADA695084C7085F7579241A6BABC', '验证类', '字典_方法查询类型', '1', 2, to_date('06-09-2019 11:35:08', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:35:08', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('909024B4481B4E1780CBC0970F3C3E14', '0', null, '字典_接口探测状态', null, 0, to_date('06-09-2019 11:38:50', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:38:50', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('BC40423A5A884D5B942E036488FAA3BC', '909024B4481B4E1780CBC0970F3C3E14', '未检测', '字典_接口探测状态', '0', 1, to_date('06-09-2019 11:38:50', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:38:50', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('365B99FE3C86452795BC79D1B588E64E', '909024B4481B4E1780CBC0970F3C3E14', '检测可通', '字典_接口探测状态', '1', 2, to_date('06-09-2019 11:38:50', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:38:50', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('E13DD3A881E94F49989E22DF4A5A5DBA', '909024B4481B4E1780CBC0970F3C3E14', '检测不通', '字典_接口探测状态', '2', 3, to_date('06-09-2019 11:38:50', 'dd-mm-yyyy hh24:mi:ss'), to_date('06-09-2019 11:38:50', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('8BA534A7C7E64445B07164FDB1AFB0AB', '3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '宁德市', '字典_区市编码', '03', 3, to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('4DB878E6C7074DCBBCE5CB9362559430', '3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '莆田市', '字典_区市编码', '04', 4, to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('F4E54B43DEEE4F1887E1EF2C1E5DB809', '3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '福州市', '字典_区市编码', '01', 1, to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('03D88091E206481C929320F676D96C1F', '3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '厦门市', '字典_区市编码', '02', 2, to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('49969B3ECDEE4F55A1C6DF83EE6312B3', '3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '泉州市', '字典_区市编码', '05', 5, to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('16CBE71FFEE342ED9C140A2693516D8E', '3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '漳州市', '字典_区市编码', '06', 6, to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('8A337A8E54774317A5393F9D713BEF5A', '3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '龙岩市', '字典_区市编码', '07', 7, to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('F34102EC0DDF46419F4944804AB073F2', '3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '三明市', '字典_区市编码', '08', 8, to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('CFA3242C52424E4F8981C10488E50F24', '3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '南平市', '字典_区市编码', '09', 9, to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('1ED79C843C844A4A8A174F8BADD4CD77', '3FB0F26C4AF141CEBA9BA2CFDDF6C2C9', '平潭综合实验区', '字典_区市编码', '10', 10, to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:32:05', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('DCF70DAC7B3F48EA816818589968A61A', '0', null, '字典_指标类型', null, 0, to_date('09-07-2019 13:39:44', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:39:44', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('5CC90F77D1414F42BC3121E7FDD3CC1F', '0', null, '字典_是与否', null, 0, to_date('09-07-2019 13:43:25', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:43:25', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('14665575EAFB473181655971AC103896', '5CC90F77D1414F42BC3121E7FDD3CC1F', '否', '字典_是与否', '1', 1, to_date('09-07-2019 13:45:53', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:45:53', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('5C15542458754321BBA82569DE8AC6B9', '5CC90F77D1414F42BC3121E7FDD3CC1F', '是', '字典_是与否', '2', 2, to_date('09-07-2019 13:45:53', 'dd-mm-yyyy hh24:mi:ss'), to_date('09-07-2019 13:45:53', 'dd-mm-yyyy hh24:mi:ss'));
+
+-- 新增字段state 修改为逻辑删除
+--select *from organization_city; -- 机构
+--select *from assetsys_city; -- 系统
+--select *from catalog_city;-- 事项
+--select *from businessmatter_city;-- 业务信息
+--select *from businessindicator_city;-- 业务指标
+--STATE	N	VARCHAR2(1)	Y	1		状态，1->正常数据，0->已删除数据 （逻辑删）
+
+
+--accounttable_city 表新增字段
+--AREACODE	N	VARCHAR2(2)	Y			地区码
+
+
+
+
+
+-- 修改表interface_city 添加字段  2019/11/30
+-- INTERFACESHORTNAME	N	VARCHAR2(256)	Y			接口简称
+-- SENDER_ID	N	VARCHAR2(128)	Y			请求id（厦门使用）
+-- AUTHORIZED_ID	N	VARCHAR2(128)	Y			授权码（厦门使用）
+-- SERVICE_ID	N	VARCHAR2(128)	Y			服务id（厦门使用）
+
+-- 字典添加
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('88A85229E1BE467DA07EA3C776D7B06C', '6666665DB63238FD456721CR7E989B83', 'xml形式', '字典_参数格式', '03', 3, to_date('30-11-2019 10:07:26', 'dd-mm-yyyy hh24:mi:ss'), to_date('30-11-2019 10:07:26', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('FBF4EB4FCAA143EE93BD56C36F559DA5', '4DCB62CA87F740FDBA781617AB7C2E59', '头验证类型', '字典_参数类型', '04', 5, to_date('30-11-2019 09:52:08', 'dd-mm-yyyy hh24:mi:ss'), to_date('30-11-2019 09:52:08', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('E5EE2EB797134CEE8A6EB580502227CA', '4DCB62CA87F740FDBA781617AB7C2E59', 'SenderId类型', '字典_参数类型', '05', 6, to_date('30-11-2019 09:52:08', 'dd-mm-yyyy hh24:mi:ss'), to_date('30-11-2019 09:52:08', 'dd-mm-yyyy hh24:mi:ss'));
+
+insert into dictionary_city (ID, PID, NAME, TYPENAME, DICTVALUE, ORDERID, CREATETIME, UPDATETIME)
+values ('98FE210B1FCC4B5EB4B740BA78A7A807', '4DCB62CA87F740FDBA781617AB7C2E59', 'ServiceId类型', '字典_参数类型', '06', 7, to_date('30-11-2019 09:52:08', 'dd-mm-yyyy hh24:mi:ss'), to_date('30-11-2019 09:52:08', 'dd-mm-yyyy hh24:mi:ss'));
+
+
