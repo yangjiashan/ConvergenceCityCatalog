@@ -695,7 +695,7 @@ public class RollBackService {
 
     // 添加事务，要么全部成功，要么全部失败
     @Transactional
-    public void saveReportLog(JSONObject jsonData, Map<String, String> interfaceInfo) {
+    public void saveReportLog(JSONObject jsonData, Map<String, String> interfaceInfo, UserBean users) {
         try {
             JSONArray jsonArray = jsonData.getJSONArray("details");
             if (jsonArray != null && jsonArray.size() > 0) {
@@ -709,6 +709,9 @@ public class RollBackService {
                     json_i.put("methodname", interfaceInfo.get("methodname"));
                     json_i.put("methodename", interfaceInfo.get("methodename"));
                     json_i.put("interfacetype", interfaceInfo.get("interfacetype"));
+                    json_i.put("report_org", users.getOrganizationName()); // 上报者所在机构
+                    json_i.put("report_orgid", users.getOrganizationID()); // 上报者所在机构ID
+                    json_i.put("report_account", users.getAccount()); // 上报者账号
                     cityReportMapper.addInterfaceLogCity(json_i);
                 }
             }

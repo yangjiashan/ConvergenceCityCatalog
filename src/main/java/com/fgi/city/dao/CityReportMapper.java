@@ -558,11 +558,11 @@ public interface CityReportMapper {
     )
     List<Map<String, String>> getMethodIdByMethodName(@Param("methodBean") JSONObject methodBean); // 根据方法名称获取方法ID
 
-    @Insert("insert into interfacelog_city (id,interfaceid,methodid,invoke_org,invoke_account,invoke_name,interface_name,method_cname,invoke_time,method_ename,interface_type) values( " +
+    @Insert("insert into interfacelog_city (id,interfaceid,methodid,invoke_org,invoke_account,invoke_name,interface_name,method_cname,invoke_time,method_ename,interface_type,report_org,report_account,report_orgid) values( " +
             "#{logBean.id,jdbcType=VARCHAR},#{logBean.interfaceid,jdbcType=VARCHAR},#{logBean.methodid,jdbcType=VARCHAR}," +
             "#{logBean.invoke_organization,jdbcType=VARCHAR},#{logBean.invoke_account,jdbcType=VARCHAR},#{logBean.invoke_name,jdbcType=VARCHAR}," +
             "#{logBean.interfacename,jdbcType=VARCHAR},#{logBean.methodname,jdbcType=VARCHAR},to_date(#{logBean.invoke_time,jdbcType=VARCHAR},'yyyy/mm/dd hh24:mi:ss'), " +
-            "#{logBean.methodename,jdbcType=VARCHAR},#{logBean.interfacetype,jdbcType=VARCHAR}" +
+            "#{logBean.methodename,jdbcType=VARCHAR},#{logBean.interfacetype,jdbcType=VARCHAR},#{logBean.report_org,jdbcType=VARCHAR},#{logBean.report_account,jdbcType=VARCHAR},#{logBean.report_orgid,jdbcType=VARCHAR} " +
             ")")
     int addInterfaceLogCity(@Param("logBean") JSONObject logBean); // 添加接口调用日志
 

@@ -864,7 +864,8 @@ public class CityReportServiceImpl implements CityReportService {
             if (interfaceInfo == null)
                 return;
             // 保存接口调用日志
-            rollBackService.saveReportLog(data, interfaceInfo);
+            UserBean users = (UserBean)jsonData.get(configBean.getParsed_user());
+            rollBackService.saveReportLog(data, interfaceInfo, users);
             result.put("code", ResultStatusEnum.SUCCUSS.getCode());
             result.put("message", ResultStatusEnum.SUCCUSS.getDesc());
         } catch (Exception e) {
